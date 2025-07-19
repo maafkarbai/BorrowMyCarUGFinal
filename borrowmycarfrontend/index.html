@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./src/assets/BorrowMyCar.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BorrowMyCar</title>
+    
+    <!-- Arabic Font Support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="src/global.css" />
+    
+    <!-- Language and Direction Support -->
+    <script>
+      // Set initial language and direction from localStorage
+      const savedLang = localStorage.getItem('language') || 'en';
+      const direction = savedLang === 'ar' ? 'rtl' : 'ltr';
+      
+      document.documentElement.lang = savedLang;
+      document.documentElement.dir = direction;
+      
+      // Set appropriate font family based on language
+      if (savedLang === 'ar') {
+        document.documentElement.style.fontFamily = '"Cairo", "Amiri", "Noto Sans Arabic", "Segoe UI", "Roboto", sans-serif';
+      } else {
+        document.documentElement.style.fontFamily = '"Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif';
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.jsx"></script>
+  </body>
+</html>

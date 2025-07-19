@@ -1,0 +1,536 @@
+@import "tailwindcss";
+
+/* RTL Support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* Flex direction reversal */
+[dir="rtl"] .flex:not(.flex-col):not(.flex-col-reverse) {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .flex-row-reverse {
+  flex-direction: row;
+}
+
+/* Space utilities */
+[dir="rtl"] .space-x-1 > * + * {
+  margin-right: 0.25rem;
+  margin-left: 0;
+}
+
+[dir="rtl"] .space-x-2 > * + * {
+  margin-right: 0.5rem;
+  margin-left: 0;
+}
+
+[dir="rtl"] .space-x-3 > * + * {
+  margin-right: 0.75rem;
+  margin-left: 0;
+}
+
+[dir="rtl"] .space-x-4 > * + * {
+  margin-right: 1rem;
+  margin-left: 0;
+}
+
+[dir="rtl"] .space-x-6 > * + * {
+  margin-right: 1.5rem;
+  margin-left: 0;
+}
+
+[dir="rtl"] .space-x-8 > * + * {
+  margin-right: 2rem;
+  margin-left: 0;
+}
+
+/* Margin utilities */
+[dir="rtl"] .mr-1,
+[dir="rtl"] .mr-2,
+[dir="rtl"] .mr-3,
+[dir="rtl"] .mr-4,
+[dir="rtl"] .mr-6,
+[dir="rtl"] .mr-8 {
+  margin-right: 0;
+}
+
+[dir="rtl"] .mr-1 {
+  margin-left: 0.25rem;
+}
+
+[dir="rtl"] .mr-2 {
+  margin-left: 0.5rem;
+}
+
+[dir="rtl"] .mr-3 {
+  margin-left: 0.75rem;
+}
+
+[dir="rtl"] .mr-4 {
+  margin-left: 1rem;
+}
+
+[dir="rtl"] .mr-6 {
+  margin-left: 1.5rem;
+}
+
+[dir="rtl"] .mr-8 {
+  margin-left: 2rem;
+}
+
+[dir="rtl"] .ml-1,
+[dir="rtl"] .ml-2,
+[dir="rtl"] .ml-3,
+[dir="rtl"] .ml-4,
+[dir="rtl"] .ml-6,
+[dir="rtl"] .ml-8,
+[dir="rtl"] .ml-auto {
+  margin-left: 0;
+}
+
+[dir="rtl"] .ml-1 {
+  margin-right: 0.25rem;
+}
+
+[dir="rtl"] .ml-2 {
+  margin-right: 0.5rem;
+}
+
+[dir="rtl"] .ml-3 {
+  margin-right: 0.75rem;
+}
+
+[dir="rtl"] .ml-4 {
+  margin-right: 1rem;
+}
+
+[dir="rtl"] .ml-6 {
+  margin-right: 1.5rem;
+}
+
+[dir="rtl"] .ml-8 {
+  margin-right: 2rem;
+}
+
+[dir="rtl"] .ml-auto {
+  margin-right: auto;
+}
+
+/* Padding utilities */
+[dir="rtl"] .pl-1,
+[dir="rtl"] .pl-2,
+[dir="rtl"] .pl-3,
+[dir="rtl"] .pl-4,
+[dir="rtl"] .pl-6,
+[dir="rtl"] .pl-8,
+[dir="rtl"] .pl-10,
+[dir="rtl"] .pl-12 {
+  padding-left: 0;
+}
+
+[dir="rtl"] .pl-1 {
+  padding-right: 0.25rem;
+}
+
+[dir="rtl"] .pl-2 {
+  padding-right: 0.5rem;
+}
+
+[dir="rtl"] .pl-3 {
+  padding-right: 0.75rem;
+}
+
+[dir="rtl"] .pl-4 {
+  padding-right: 1rem;
+}
+
+[dir="rtl"] .pl-6 {
+  padding-right: 1.5rem;
+}
+
+[dir="rtl"] .pl-8 {
+  padding-right: 2rem;
+}
+
+[dir="rtl"] .pl-10 {
+  padding-right: 2.5rem;
+}
+
+[dir="rtl"] .pl-12 {
+  padding-right: 3rem;
+}
+
+[dir="rtl"] .pr-1,
+[dir="rtl"] .pr-2,
+[dir="rtl"] .pr-3,
+[dir="rtl"] .pr-4,
+[dir="rtl"] .pr-6,
+[dir="rtl"] .pr-8,
+[dir="rtl"] .pr-10,
+[dir="rtl"] .pr-12 {
+  padding-right: 0;
+}
+
+[dir="rtl"] .pr-1 {
+  padding-left: 0.25rem;
+}
+
+[dir="rtl"] .pr-2 {
+  padding-left: 0.5rem;
+}
+
+[dir="rtl"] .pr-3 {
+  padding-left: 0.75rem;
+}
+
+[dir="rtl"] .pr-4 {
+  padding-left: 1rem;
+}
+
+[dir="rtl"] .pr-6 {
+  padding-left: 1.5rem;
+}
+
+[dir="rtl"] .pr-8 {
+  padding-left: 2rem;
+}
+
+[dir="rtl"] .pr-10 {
+  padding-left: 2.5rem;
+}
+
+[dir="rtl"] .pr-12 {
+  padding-left: 3rem;
+}
+
+/* Position utilities */
+[dir="rtl"] .left-0 {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .left-2 {
+  left: auto;
+  right: 0.5rem;
+}
+
+[dir="rtl"] .left-4 {
+  left: auto;
+  right: 1rem;
+}
+
+[dir="rtl"] .right-0 {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .right-2 {
+  right: auto;
+  left: 0.5rem;
+}
+
+[dir="rtl"] .right-4 {
+  right: auto;
+  left: 1rem;
+}
+
+/* Text alignment */
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+/* Border radius */
+[dir="rtl"] .rounded-l-lg {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+[dir="rtl"] .rounded-r-lg {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+}
+
+[dir="rtl"] .rounded-tl-lg {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0.5rem;
+}
+
+[dir="rtl"] .rounded-tr-lg {
+  border-top-right-radius: 0;
+  border-top-left-radius: 0.5rem;
+}
+
+[dir="rtl"] .rounded-bl-lg {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0.5rem;
+}
+
+[dir="rtl"] .rounded-br-lg {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0.5rem;
+}
+
+/* Transform utilities */
+[dir="rtl"] .transform.rotate-90 {
+  transform: rotate(-90deg);
+}
+
+[dir="rtl"] .transform.rotate-180 {
+  transform: rotate(180deg);
+}
+
+[dir="rtl"] .transform.-rotate-90 {
+  transform: rotate(90deg);
+}
+
+/* Justify content */
+[dir="rtl"] .justify-start {
+  justify-content: flex-end;
+}
+
+[dir="rtl"] .justify-end {
+  justify-content: flex-start;
+}
+
+/* Items alignment */
+[dir="rtl"] .items-start {
+  align-items: flex-end;
+}
+
+[dir="rtl"] .items-end {
+  align-items: flex-start;
+}
+
+/* Grid utilities */
+[dir="rtl"] .grid-cols-1,
+[dir="rtl"] .grid-cols-2,
+[dir="rtl"] .grid-cols-3,
+[dir="rtl"] .grid-cols-4 {
+  direction: rtl;
+}
+
+/* Form inputs */
+[dir="rtl"] input[type="text"],
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="password"],
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] input[type="search"],
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  text-align: right;
+  direction: rtl;
+}
+
+[dir="rtl"] input::placeholder,
+[dir="rtl"] textarea::placeholder {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Dropdown menus */
+[dir="rtl"] .dropdown-menu {
+  left: auto;
+  right: 0;
+}
+
+/* Notifications and alerts */
+[dir="rtl"] .alert {
+  text-align: right;
+}
+
+/* Modal positioning */
+[dir="rtl"] .modal-dialog {
+  direction: rtl;
+}
+
+/* Badge positioning */
+[dir="rtl"] .badge {
+  direction: rtl;
+}
+
+/* Card layouts */
+[dir="rtl"] .card {
+  direction: rtl;
+}
+
+/* Navigation */
+[dir="rtl"] .nav-item {
+  direction: rtl;
+}
+
+/* Buttons with icons */
+[dir="rtl"] .btn-icon {
+  flex-direction: row-reverse;
+}
+
+/* Breadcrumbs */
+[dir="rtl"] .breadcrumb {
+  direction: rtl;
+}
+
+[dir="rtl"] .breadcrumb-item::before {
+  content: "\\";
+  transform: scaleX(-1);
+}
+
+/* Tabs */
+[dir="rtl"] .tab-content {
+  direction: rtl;
+}
+
+/* Tooltips */
+[dir="rtl"] .tooltip {
+  direction: rtl;
+}
+
+/* Progress bars */
+[dir="rtl"] .progress-bar {
+  direction: rtl;
+}
+
+/* Arabic font support */
+[dir="rtl"] {
+  font-family: "Cairo", "Amiri", "Noto Sans Arabic", "Segoe UI", "Roboto", sans-serif;
+}
+
+/* Better Arabic text rendering */
+[dir="rtl"] p, 
+[dir="rtl"] h1, 
+[dir="rtl"] h2, 
+[dir="rtl"] h3, 
+[dir="rtl"] h4, 
+[dir="rtl"] h5, 
+[dir="rtl"] h6,
+[dir="rtl"] span,
+[dir="rtl"] div,
+[dir="rtl"] label,
+[dir="rtl"] button {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Number formatting for Arabic */
+[dir="rtl"] .price,
+[dir="rtl"] .number {
+  direction: ltr;
+  text-align: right;
+}
+
+/* Icon positioning */
+[dir="rtl"] .icon-left {
+  order: 2;
+  margin-left: 0.5rem;
+  margin-right: 0;
+}
+
+[dir="rtl"] .icon-right {
+  order: 1;
+  margin-right: 0.5rem;
+  margin-left: 0;
+}
+
+/* Search input */
+[dir="rtl"] .search-input {
+  padding-right: 2.5rem;
+  padding-left: 1rem;
+}
+
+[dir="rtl"] .search-icon {
+  right: auto;
+  left: 0.75rem;
+}
+
+/* Date picker */
+[dir="rtl"] .date-picker {
+  direction: rtl;
+}
+
+/* Map controls */
+[dir="rtl"] .mapboxgl-ctrl-top-left {
+  top: 10px;
+  left: auto;
+  right: 10px;
+}
+
+[dir="rtl"] .mapboxgl-ctrl-top-right {
+  top: 10px;
+  right: auto;
+  left: 10px;
+}
+
+[dir="rtl"] .mapboxgl-ctrl-bottom-left {
+  bottom: 10px;
+  left: auto;
+  right: 10px;
+}
+
+[dir="rtl"] .mapboxgl-ctrl-bottom-right {
+  bottom: 10px;
+  right: auto;
+  left: 10px;
+}
+
+/* Responsive RTL adjustments */
+@media (max-width: 768px) {
+  [dir="rtl"] .mobile-nav {
+    direction: rtl;
+  }
+  
+  [dir="rtl"] .mobile-menu {
+    left: auto;
+    right: 0;
+  }
+}
+
+.input {
+  @apply px-4 py-2 rounded-xl border-2 border-gray-300 focus:outline-none focus:bg-gray-50 focus:ring-2 focus:ring-green-500;
+}
+
+.accent-color {
+  @apply text-green-500;
+}
+
+p {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.mapboxgl-popup-content {
+  padding: 8px !important;
+  border-radius: 8px !important;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: white !important;
+}
+
+.mapboxgl-ctrl-group {
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.mapboxgl-marker {
+  cursor: pointer;
+}
+
+/* Geocoder customizations */
+.mapboxgl-ctrl-geocoder {
+  min-width: 300px !important;
+}
+
+.mapboxgl-ctrl-geocoder input {
+  font-size: 14px !important;
+}

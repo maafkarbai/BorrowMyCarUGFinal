@@ -1,0 +1,46 @@
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext js,jsx --fix",
+    "test": "node ../scripts/runTests.js",
+    "test:functionality": "node ../scripts/runTests.js functionality",
+    "test:security": "node ../scripts/runTests.js security",
+    "test:compatibility": "node ../scripts/runTests.js compatibility"
+  },
+  "name": "borrowmycarfrontend",
+  "module": "src/index.jsx",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@vitejs/plugin-react": "^4.6.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.0",
+    "jsdom": "^26.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.4.0",
+    "@tailwindcss/vite": "^4.1.11",
+    "axios": "^1.10.0",
+    "chart.js": "^4.4.0",
+    "i18next": "^25.2.1",
+    "i18next-browser-languagedetector": "^8.2.0",
+    "lucide-react": "^0.523.0",
+    "react": "^19.1.0",
+    "react-chartjs-2": "^5.2.0",
+    "react-dom": "^19.1.0",
+    "react-helmet-async": "^2.0.5",
+    "react-i18next": "^15.5.3",
+    "react-router-dom": "^7.6.2",
+    "tailwindcss": "^4.1.11"
+  }
+}

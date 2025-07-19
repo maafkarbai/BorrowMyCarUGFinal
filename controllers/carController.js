@@ -53,6 +53,13 @@ const sanitizeCarData = (data) => {
   if (data.availabilityFrom) sanitized.availabilityFrom = data.availabilityFrom;
   if (data.availabilityTo) sanitized.availabilityTo = data.availabilityTo;
 
+  // Insurance fields
+  if (data.hasInsurance !== undefined) sanitized.hasInsurance = data.hasInsurance === true || data.hasInsurance === 'true';
+  if (data.insuranceProvider) sanitized.insuranceProvider = data.insuranceProvider.toString().trim();
+  if (data.insurancePolicyNumber) sanitized.insurancePolicyNumber = data.insurancePolicyNumber.toString().trim();
+  if (data.insuranceExpiryDate) sanitized.insuranceExpiryDate = data.insuranceExpiryDate;
+  if (data.insuranceType) sanitized.insuranceType = data.insuranceType.toString().trim();
+
   return sanitized;
 };
 

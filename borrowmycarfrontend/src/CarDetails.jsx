@@ -489,6 +489,112 @@ const CarDetails = () => {
                   </p>
                 </div>
 
+                {/* Car Specifications */}
+                <div className="border-t pt-4">
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    Specifications
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm text-gray-500">Make & Model</span>
+                      <p className="font-medium text-gray-900">{car.make} {car.model}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Year</span>
+                      <p className="font-medium text-gray-900">{car.year}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Transmission</span>
+                      <p className="font-medium text-gray-900">{car.transmission}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Fuel Type</span>
+                      <p className="font-medium text-gray-900">{car.fuelType}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Mileage</span>
+                      <p className="font-medium text-gray-900">{car.mileage?.toLocaleString()} km</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Seating</span>
+                      <p className="font-medium text-gray-900">{car.seatingCapacity} seats</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Color</span>
+                      <p className="font-medium text-gray-900">{car.color}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Plate Number</span>
+                      <p className="font-medium text-gray-900">{car.plateNumber}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Insurance Information */}
+                <div className="border-t pt-4">
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    Insurance Information
+                  </h3>
+                  {car.hasInsurance ? (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center mb-3">
+                        <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium text-green-800">This vehicle is insured</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-green-600">Provider</span>
+                          <p className="font-medium text-green-900">{car.insuranceProvider}</p>
+                        </div>
+                        <div>
+                          <span className="text-green-600">Policy Type</span>
+                          <p className="font-medium text-green-900">{car.insuranceType}</p>
+                        </div>
+                        <div>
+                          <span className="text-green-600">Policy Number</span>
+                          <p className="font-medium text-green-900">{car.insurancePolicyNumber}</p>
+                        </div>
+                        <div>
+                          <span className="text-green-600">Valid Until</span>
+                          <p className="font-medium text-green-900">
+                            {new Date(car.insuranceExpiryDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-yellow-800">This vehicle does not have insurance information on file</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Features */}
+                {car.features && car.features.length > 0 && (
+                  <div className="border-t pt-4">
+                    <h3 className="font-semibold text-gray-900 mb-3">
+                      Features
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {car.features.map((feature, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Contact Owner Section */}
                 {car.owner && (
                   <div className="border-t pt-4">

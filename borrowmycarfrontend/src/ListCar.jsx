@@ -22,6 +22,12 @@ const ListCar = () => {
     plateNumber: "",
     specifications: "GCC Specs",
     features: [],
+    // Insurance details
+    hasInsurance: false,
+    insuranceProvider: "",
+    insurancePolicyNumber: "",
+    insuranceExpiryDate: "",
+    insuranceType: "",
   });
   const [images, setImages] = useState([]);
   const [error, setError] = useState("");
@@ -58,6 +64,8 @@ const ListCar = () => {
   const seatingOptions = ["2", "4", "5", "7", "8"];
   
   const specificationTypes = ["GCC Specs", "US Specs", "European Specs", "Japanese Specs", "Canadian Specs", "Korean Specs"];
+  
+  const insuranceTypes = ["Comprehensive", "Third Party", "Third Party Fire & Theft"];
   
   const availableFeatures = [
     "GPS Navigation", "Bluetooth", "USB Charging", "Wireless Charging",
@@ -462,6 +470,35 @@ const ListCar = () => {
       return false;
     }
 
+    // Validate insurance fields if insurance is enabled
+    if (form.hasInsurance) {
+      if (!form.insuranceProvider.trim()) {
+        setError("Insurance provider is required when insurance is enabled");
+        return false;
+      }
+      if (!form.insurancePolicyNumber.trim()) {
+        setError("Insurance policy number is required");
+        return false;
+      }
+      if (!form.insuranceExpiryDate) {
+        setError("Insurance expiry date is required");
+        return false;
+      }
+      if (!form.insuranceType) {
+        setError("Insurance type is required");
+        return false;
+      }
+      
+      // Check if insurance expiry date is in the future
+      const expiryDate = new Date(form.insuranceExpiryDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (expiryDate <= today) {
+        setError("Insurance expiry date must be in the future");
+        return false;
+      }
+    }
+
     // Validate image files
     const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
     const maxSize = 5 * 1024 * 1024; // 5MB
@@ -557,6 +594,12 @@ const ListCar = () => {
         plateNumber: "",
         specifications: "GCC Specs",
         features: [],
+        // Insurance details
+        hasInsurance: false,
+        insuranceProvider: "",
+        insurancePolicyNumber: "",
+        insuranceExpiryDate: "",
+        insuranceType: "",
       });
       setImages([]);
       setFileInputKey(Date.now()); // Reset file input
@@ -978,6 +1021,104 @@ const ListCar = () => {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Insurance Information Section */}
+        <div className="bg-blue-50 p-6 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Insurance Information</h3>
+          
+          {/* Insurance Toggle */}
+          <div className="mb-4">
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="hasInsurance"
+                checked={form.hasInsurance}
+                onChange={(e) => setForm({ ...form, hasInsurance: e.target.checked })}
+                className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+              />
+              <span className="text-md font-medium text-gray-700">This car has active insurance</span>
+            </label>
+          </div>
+
+          {/* Insurance Details - Only show when hasInsurance is true */}
+          {form.hasInsurance && (
+            <div className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Insurance Provider *
+                  </label>
+                  <input
+                    type="text"
+                    name="insuranceProvider"
+                    value={form.insuranceProvider}
+                    placeholder="e.g., AXA, Oman Insurance"
+                    onChange={handleChange}
+                    required={form.hasInsurance}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Policy Number *
+                  </label>
+                  <input
+                    type="text"
+                    name="insurancePolicyNumber"
+                    value={form.insurancePolicyNumber}
+                    placeholder="e.g., POL-123456789"
+                    onChange={handleChange}
+                    required={form.hasInsurance}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Insurance Type *
+                  </label>
+                  <select
+                    name="insuranceType"
+                    value={form.insuranceType}
+                    onChange={handleChange}
+                    required={form.hasInsurance}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                  >
+                    <option value="">Select Insurance Type</option>
+                    {insuranceTypes.map((type, index) => (
+                      <option key={index} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Expiry Date *
+                  </label>
+                  <input
+                    type="date"
+                    name="insuranceExpiryDate"
+                    value={form.insuranceExpiryDate}
+                    onChange={handleChange}
+                    required={form.hasInsurance}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Insurance Info Message */}
+              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-800">
+                  ✓ Cars with valid insurance are more attractive to renters and may receive priority in search results
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Image Upload */}

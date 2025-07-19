@@ -109,6 +109,30 @@ export const createBooking = handleAsyncError(async (req, res) => {
       });
     }
 
+    // Check if car has valid insurance
+    if (car.hasInsurance) {
+      const today = new Date();
+      const insuranceExpiryDate = new Date(car.insuranceExpiryDate);
+      
+      if (insuranceExpiryDate <= today) {
+        return res.status(400).json({
+          success: false,
+          message: "This car's insurance has expired. Booking is not available.",
+          code: "INSURANCE_EXPIRED",
+        });
+      }
+    } else {
+      // If you want to enforce insurance requirement, uncomment the following:
+      // return res.status(400).json({
+      //   success: false,
+      //   message: "This car does not have insurance coverage. Booking is not available.",
+      //   code: "NO_INSURANCE",
+      // });
+      
+      // For now, we'll allow bookings but warn the user
+      console.warn(`Booking created for uninsured car: ${carId}`);
+    }
+
     // Check if dates are within car availability range
     const requestStart = new Date(startDate);
     const requestEnd = new Date(endDate);

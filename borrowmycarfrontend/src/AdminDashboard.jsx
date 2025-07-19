@@ -206,6 +206,46 @@ const CarCard = ({ car, updateCarStatus, deleteCar }) => (
             </span>
           </div>
         </div>
+        
+        {/* Insurance Information */}
+        {car.hasInsurance && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <div className="flex items-center mb-2">
+              <span className="text-blue-600 mr-2">🛡️</span>
+              <h4 className="text-sm font-semibold text-blue-900">Insurance Details</h4>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+              <div>
+                <p className="text-blue-600">Provider</p>
+                <p className="font-medium text-blue-900">{car.insuranceProvider}</p>
+              </div>
+              <div>
+                <p className="text-blue-600">Policy #</p>
+                <p className="font-medium text-blue-900">{car.insurancePolicyNumber}</p>
+              </div>
+              <div>
+                <p className="text-blue-600">Type</p>
+                <p className="font-medium text-blue-900">{car.insuranceType}</p>
+              </div>
+              <div>
+                <p className="text-blue-600">Expires</p>
+                <p className="font-medium text-blue-900">
+                  {new Date(car.insuranceExpiryDate).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        {!car.hasInsurance && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+            <div className="flex items-center">
+              <span className="text-yellow-600 mr-2">⚠️</span>
+              <p className="text-sm text-yellow-800">
+                <strong>No Insurance:</strong> This vehicle is not insured
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-row lg:flex-col gap-2 justify-end">

@@ -268,6 +268,48 @@ const carSchema = new mongoose.Schema(
     deliveryAvailable: { type: Boolean, default: false },
     deliveryFee: { type: Number, default: 0, min: 0 },
     securityDeposit: { type: Number, default: 500, min: 0 },
+    // Insurance details
+    hasInsurance: {
+      type: Boolean,
+      required: [true, "Insurance status is required"],
+      default: false,
+    },
+    insuranceProvider: {
+      type: String,
+      required: function() {
+        return this.hasInsurance === true;
+      },
+      trim: true,
+    },
+    insurancePolicyNumber: {
+      type: String,
+      required: function() {
+        return this.hasInsurance === true;
+      },
+      trim: true,
+    },
+    insuranceExpiryDate: {
+      type: Date,
+      required: function() {
+        return this.hasInsurance === true;
+      },
+      validate: {
+        validator: function(v) {
+          return !this.hasInsurance || v > new Date();
+        },
+        message: "Insurance expiry date must be in the future",
+      },
+    },
+    insuranceType: {
+      type: String,
+      enum: {
+        values: ["Comprehensive", "Third Party", "Third Party Fire & Theft"],
+        message: "Please select a valid insurance type",
+      },
+      required: function() {
+        return this.hasInsurance === true;
+      },
+    },
     // Status tracking
     status: {
       type: String,

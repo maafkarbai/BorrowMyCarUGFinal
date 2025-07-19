@@ -324,6 +324,9 @@ const SellerDashboard = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Avg Rating
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Insurance
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -354,6 +357,21 @@ const SellerDashboard = () => {
                         {car.avgRating
                           ? `${car.avgRating.toFixed(1)} ⭐`
                           : "No reviews"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {car.carDetails.hasInsurance ? (
+                          <div className="flex items-center">
+                            <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                            <span className="text-sm text-green-800 font-medium">
+                              {car.carDetails.insuranceType || "Insured"}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center">
+                            <XCircle className="h-4 w-4 text-red-500 mr-1" />
+                            <span className="text-sm text-red-800">Not Insured</span>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}

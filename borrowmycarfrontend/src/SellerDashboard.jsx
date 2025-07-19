@@ -147,7 +147,7 @@ const SellerDashboard = () => {
     ],
   };
 
-  const StatCard = ({ title, value, color, subtitle }) => (
+  const StatCard = ({ title, value, color, subtitle, icon: Icon }) => (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center justify-between">
         <div>

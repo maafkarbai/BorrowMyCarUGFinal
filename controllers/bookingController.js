@@ -2,8 +2,10 @@
 import Booking from "../models/Booking.js"; // Default import
 import Car from "../models/Car.js"; // Default import
 import Notification from "../models/Notification.js"; // Default import
+import User from "../models/User.js"; // Default import
 
 import { handleAsyncError } from "../utils/errorHandler.js";
+import emailService from "../utils/emailService.js";
 
 // Check for booking conflicts
 const checkBookingConflicts = async (
@@ -213,6 +215,34 @@ export const createBooking = handleAsyncError(async (req, res) => {
         car.title,
         { carId: car._id }
       );
+
+      // Send email notification to car owner
+      try {
+        const owner = await User.findById(car.owner);
+        if (owner && owner.email) {
+          const bookingData = {
+            bookingId: savedBooking._id,
+            carBrand: car.brand,
+            carModel: car.model,
+            renterName: user.name,
+            renterPhone: user.phone,
+            startDate: savedBooking.startDate,
+            endDate: savedBooking.endDate,
+            duration: savedBooking.totalDays,
+            totalAmount: savedBooking.totalAmount,
+            pickupLocation: savedBooking.pickupLocation,
+            returnLocation: savedBooking.returnLocation,
+            deliveryRequested: savedBooking.deliveryRequested,
+            deliveryAddress: savedBooking.deliveryAddress
+          };
+          
+          await emailService.sendBookingNotificationEmail(owner.email, bookingData);
+          console.log("Booking notification email sent to owner");
+        }
+      } catch (emailError) {
+        console.error("Failed to send booking notification email:", emailError);
+        // Continue even if email fails
+      }
     } catch (notificationError) {
       console.error("Failed to send booking notifications:", notificationError);
       // Continue with the response even if notification fails
@@ -529,6 +559,32 @@ export const cancelBooking = handleAsyncError(async (req, res) => {
           booking.car.title,
           { carId: booking.car._id }
         );
+
+        // Send email notification to renter about cancellation
+        try {
+          const renter = await User.findById(booking.renter);
+          if (renter && renter.email) {
+            const bookingData = {
+              bookingId: booking._id,
+              carBrand: booking.car.brand,
+              carModel: booking.car.model,
+              startDate: booking.startDate,
+              endDate: booking.endDate,
+              duration: booking.totalDays,
+              totalAmount: booking.totalAmount
+            };
+            
+            await emailService.sendBookingCancellationEmail(
+              renter.email, 
+              bookingData, 
+              cancellationReason
+            );
+            console.log("Booking cancellation email sent to renter");
+          }
+        } catch (emailError) {
+          console.error("Failed to send booking cancellation email:", emailError);
+          // Continue even if email fails
+        }
       } else if (isAdmin) {
         // Notify both parties about admin cancellation
         await Notification.createBookingNotification(
@@ -545,6 +601,52 @@ export const cancelBooking = handleAsyncError(async (req, res) => {
           booking.car.title,
           { carId: booking.car._id }
         );
+
+        // Send email notifications to both parties for admin cancellation
+        try {
+          const [renter, owner] = await Promise.all([
+            User.findById(booking.renter),
+            User.findById(booking.car.owner)
+          ]);
+
+          const bookingData = {
+            bookingId: booking._id,
+            carBrand: booking.car.brand,
+            carModel: booking.car.model,
+            startDate: booking.startDate,
+            endDate: booking.endDate,
+            duration: booking.totalDays,
+            totalAmount: booking.totalAmount
+          };
+
+          const emailPromises = [];
+          
+          if (renter && renter.email) {
+            emailPromises.push(
+              emailService.sendBookingCancellationEmail(
+                renter.email,
+                bookingData,
+                cancellationReason || "Cancelled by admin"
+              )
+            );
+          }
+
+          if (owner && owner.email) {
+            emailPromises.push(
+              emailService.sendBookingCancellationEmail(
+                owner.email,
+                bookingData,
+                cancellationReason || "Cancelled by admin"
+              )
+            );
+          }
+
+          await Promise.all(emailPromises);
+          console.log("Admin cancellation emails sent to all parties");
+        } catch (emailError) {
+          console.error("Failed to send admin cancellation emails:", emailError);
+          // Continue even if email fails
+        }
       }
     } catch (notificationError) {
       console.error("Failed to send cancellation notifications:", notificationError);

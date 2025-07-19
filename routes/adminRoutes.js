@@ -57,7 +57,7 @@ router.put(
     body("name").optional().trim().notEmpty().withMessage("Name is required"),
     body("email").optional().isEmail().withMessage("Invalid email"),
     body("phone").optional().matches(/^[0-9+()-\s]+$/).withMessage("Invalid phone number"),
-    body("role").optional().isIn(["renter", "owner"]).withMessage("Invalid role"),
+    body("role").optional().isIn(["renter", "owner", "admin"]).withMessage("Invalid role"),
     body("preferredCity").optional().isIn([
       "Dubai", "Abu Dhabi", "Sharjah", "Ajman",
       "Fujairah", "Ras Al Khaimah", "Umm Al Quwain"

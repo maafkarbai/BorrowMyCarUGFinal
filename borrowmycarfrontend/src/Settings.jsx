@@ -342,20 +342,20 @@ const Settings = () => {
                       />
                       <div className="text-center">
                         <h3 className="font-medium text-gray-900">
-                          {user.name}
+                          {user?.name || ""}
                         </h3>
                         <p className="text-sm text-gray-500 capitalize">
-                          {user.role}
+                          {user?.role || ""}
                         </p>
                         <div className="flex items-center justify-center mt-2">
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              user.isApproved
+                              user?.isApproved
                                 ? "bg-green-100 text-green-800"
                                 : "bg-yellow-100 text-yellow-800"
                             }`}
                           >
-                            {user.isApproved ? "Verified" : "Pending"}
+                            {user?.isApproved ? "Verified" : "Pending"}
                           </span>
                         </div>
                       </div>
@@ -391,7 +391,7 @@ const Settings = () => {
                           </label>
                           <input
                             type="email"
-                            value={user.email}
+                            value={user?.email || ""}
                             disabled
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
                           />
@@ -406,7 +406,7 @@ const Settings = () => {
                           </label>
                           <input
                             type="text"
-                            value={user.phone}
+                            value={user?.phone || ""}
                             disabled
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
                           />

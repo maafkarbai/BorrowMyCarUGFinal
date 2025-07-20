@@ -398,14 +398,59 @@ export const deleteCar = handleAsyncError(async (req, res) => {
   const activeBookings = await Booking.find({
     car: id,
     status: { $in: ["pending", "approved", "confirmed", "active"] },
-  });
+  })
+    .populate("user", "name email")
+    .populate("car", "title make model");
 
   if (activeBookings.length > 0) {
-    return res.status(400).json({
-      success: false,
-      message: "Cannot delete car with active bookings",
-      code: "ACTIVE_BOOKINGS_EXIST",
-    });
+    // Cancel all active bookings and notify users
+    const EmailService = (await import("../utils/emailService.js")).default;
+    const emailService = new EmailService();
+    const Notification = (await import("../models/Notification.js")).default;
+
+    await Booking.updateMany(
+      {
+        car: id,
+        status: { $in: ["pending", "approved", "confirmed", "active"] },
+      },
+      {
+        status: "cancelled",
+        cancellationReason: "Car removed by owner",
+        cancelledBy: user.id,
+        cancelledAt: new Date(),
+      }
+    );
+
+    // Send notifications and emails to affected users
+    for (const booking of activeBookings) {
+      // Create notification
+      await Notification.create({
+        user: booking.user._id,
+        type: "booking_cancelled",
+        title: "Booking Cancelled - Car No Longer Available",
+        message: `Your booking for ${car.title} has been cancelled as the car owner has removed this listing.`,
+        data: { bookingId: booking._id },
+      });
+
+      // Send cancellation email
+      const bookingData = {
+        carBrand: car.make,
+        carModel: car.model,
+        carTitle: car.title,
+        startDate: booking.pickupDate,
+        endDate: booking.returnDate,
+        duration: Math.ceil((new Date(booking.returnDate) - new Date(booking.pickupDate)) / (1000 * 60 * 60 * 24)),
+        totalAmount: booking.totalPayable,
+        bookingId: booking._id,
+        renterName: booking.user.name,
+      };
+
+      await emailService.sendBookingCancellationEmail(
+        booking.user.email,
+        bookingData,
+        "The car owner has decided to remove this listing from our platform. We apologize for any inconvenience caused."
+      );
+    }
   }
 
   // Soft delete (mark as deleted)

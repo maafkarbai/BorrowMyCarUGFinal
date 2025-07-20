@@ -504,6 +504,7 @@ export const deleteUser = handleAsyncError(async (req, res) => {
 // DELETE CAR (ADMIN)
 export const deleteCar = handleAsyncError(async (req, res) => {
   const { carId } = req.params;
+  const { force } = req.query; // Allow force deletion with ?force=true
 
   const car = await Car.findById(carId);
   if (!car) {
@@ -519,11 +520,72 @@ export const deleteCar = handleAsyncError(async (req, res) => {
     status: { $in: ["pending", "approved", "confirmed", "active"] },
   });
 
-  if (activeBookings.length > 0) {
+  if (activeBookings.length > 0 && force !== "true") {
     return res.status(400).json({
       success: false,
       message: "Cannot delete car with active bookings",
+      activeBookingsCount: activeBookings.length,
+      hint: "Use force=true query parameter to force delete",
     });
+  }
+
+  // If force deleting with active bookings, cancel them first
+  if (activeBookings.length > 0 && force === "true") {
+    // Import email service
+    const EmailService = (await import("../utils/emailService.js")).default;
+    const emailService = new EmailService();
+
+    // Populate bookings with user and car details for emails
+    const populatedBookings = await Booking.find({
+      car: carId,
+      status: { $in: ["pending", "approved", "confirmed", "active"] },
+    })
+      .populate("user", "name email")
+      .populate("car", "title make model");
+
+    await Booking.updateMany(
+      {
+        car: carId,
+        status: { $in: ["pending", "approved", "confirmed", "active"] },
+      },
+      {
+        status: "cancelled",
+        cancellationReason: "Car removed from platform by administrator",
+        cancelledBy: req.user.id,
+        cancelledAt: new Date(),
+      }
+    );
+
+    // Send notifications and emails to affected users
+    for (const booking of populatedBookings) {
+      // Create notification
+      await Notification.create({
+        user: booking.user._id,
+        type: "booking_cancelled",
+        title: "Booking Cancelled - Car No Longer Available",
+        message: `Your booking for ${booking.car.title} has been cancelled as the car has been removed from the platform by our administrators.`,
+        data: { bookingId: booking._id },
+      });
+
+      // Send cancellation email
+      const bookingData = {
+        carBrand: booking.car.make,
+        carModel: booking.car.model,
+        carTitle: booking.car.title,
+        startDate: booking.pickupDate,
+        endDate: booking.returnDate,
+        duration: Math.ceil((new Date(booking.returnDate) - new Date(booking.pickupDate)) / (1000 * 60 * 60 * 24)),
+        totalAmount: booking.totalPayable,
+        bookingId: booking._id,
+        renterName: booking.user.name,
+      };
+
+      await emailService.sendBookingCancellationEmail(
+        booking.user.email,
+        bookingData,
+        "The car owner has removed this listing from our platform. We apologize for any inconvenience caused."
+      );
+    }
   }
 
   // Soft delete
@@ -534,6 +596,7 @@ export const deleteCar = handleAsyncError(async (req, res) => {
   res.json({
     success: true,
     message: "Car deleted successfully",
+    cancelledBookings: force === "true" ? activeBookings.length : 0,
   });
 });
 

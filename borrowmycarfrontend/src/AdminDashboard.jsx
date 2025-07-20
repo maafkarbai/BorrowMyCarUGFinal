@@ -1379,7 +1379,28 @@ const AdminDashboard = () => {
       setError("");
     } catch (err) {
       console.error("Error deleting car:", err);
-      setError("Failed to delete car");
+      
+      // Check if it's due to active bookings
+      if (err.response?.status === 400 && err.response?.data?.activeBookingsCount) {
+        const { activeBookingsCount } = err.response.data;
+        const forceDelete = window.confirm(
+          `This car has ${activeBookingsCount} active booking(s). Do you want to force delete and cancel all active bookings?`
+        );
+        
+        if (forceDelete) {
+          try {
+            await adminAPI.delete(`/admin/cars/${carId}?force=true`);
+            await Promise.all([fetchCars(), fetchStats()]);
+            setError("");
+            alert(`Car deleted successfully. ${activeBookingsCount} booking(s) were cancelled.`);
+          } catch (forceErr) {
+            console.error("Error force deleting car:", forceErr);
+            setError("Failed to force delete car");
+          }
+        }
+      } else {
+        setError(err.response?.data?.message || "Failed to delete car");
+      }
     }
   };
 

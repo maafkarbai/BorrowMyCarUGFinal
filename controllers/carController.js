@@ -140,6 +140,15 @@ export const createCar = handleAsyncError(async (req, res) => {
   const savedCar = await newCar.save();
   await savedCar.populate("owner", "name email phone profileImage");
 
+  // Send car listing request notification
+  try {
+    const Notification = (await import("../models/Notification.js")).default;
+    await Notification.createCarListingRequestNotification(user.id, savedCar);
+  } catch (notificationError) {
+    console.error("Failed to send car listing notification:", notificationError);
+    // Don't fail the car creation if notification fails
+  }
+
   // Add pricePerDay for frontend compatibility
   const responseData = {
     ...savedCar.toObject(),

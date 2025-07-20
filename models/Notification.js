@@ -21,6 +21,7 @@ const notificationSchema = new mongoose.Schema(
         "payment_failed",
         "car_approved",
         "car_rejected",
+        "car_listing_request",
         "new_booking_request",
         "reminder",
         "system_announcement",
@@ -287,6 +288,35 @@ notificationSchema.statics.createPaymentNotification = function (
       amount,
       ...additionalData,
       redirectUrl: "/my-bookings",
+    },
+    channels: {
+      inApp: true,
+      email: true,
+      sms: false,
+      push: true,
+    },
+  });
+};
+
+notificationSchema.statics.createCarListingRequestNotification = function (
+  userId,
+  carData
+) {
+  return this.create({
+    user: userId,
+    type: "car_listing_request",
+    title: "Car Listing Request Submitted! 🚗",
+    message: `Your ${carData.title} has been submitted for review. Our team will approve your listing within 24 hours and you'll receive a notification once it's live on the platform.`,
+    priority: "medium",
+    data: {
+      carId: carData._id,
+      carTitle: carData.title,
+      carMake: carData.make,
+      carModel: carData.model,
+      carYear: carData.year,
+      carPrice: carData.price,
+      carCity: carData.city,
+      redirectUrl: "/seller/listings",
     },
     channels: {
       inApp: true,

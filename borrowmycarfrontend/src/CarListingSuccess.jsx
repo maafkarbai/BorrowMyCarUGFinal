@@ -274,6 +274,44 @@ const CarListingSuccess = () => {
                 </div>
               </div>
 
+              {/* Approval Status */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                  <Clock className="w-6 h-6 mr-3 text-orange-600" />
+                  Listing Review Status
+                </h3>
+
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                        <Clock className="w-6 h-6 text-orange-600" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-orange-900 mb-2">
+                        Under Review - Approval within 24 hours
+                      </h4>
+                      <p className="text-orange-800 mb-3">
+                        Your car listing has been submitted and is currently under review by our team. 
+                        We'll approve your listing within 24 hours and notify you immediately once it's live.
+                      </p>
+                      <div className="bg-orange-100 border border-orange-200 rounded-lg p-3">
+                        <p className="text-sm text-orange-700 font-medium">
+                          📱 You'll receive a notification with the following details:
+                        </p>
+                        <ul className="text-sm text-orange-700 mt-2 space-y-1">
+                          <li>• Car: {car.title}</li>
+                          <li>• Location: {car.city}, UAE</li>
+                          <li>• Price: AED {car.price}/day</li>
+                          <li>• Expected approval: Within 24 hours</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Next Steps */}
               <div className="mb-8">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
@@ -290,10 +328,10 @@ const CarListingSuccess = () => {
                       <Eye className="w-5 h-5 text-blue-600" />
                     </div>
                     <h4 className="font-semibold text-blue-900 mb-2">
-                      Visibility
+                      Review & Approval
                     </h4>
                     <p className="text-sm text-blue-700">
-                      Your car is now visible to thousands of potential renters across the UAE
+                      Our team will review your listing and approve it within 24 hours
                     </p>
                   </div>
 
@@ -305,10 +343,10 @@ const CarListingSuccess = () => {
                       <Phone className="w-5 h-5 text-orange-600" />
                     </div>
                     <h4 className="font-semibold text-orange-900 mb-2">
-                      Booking Requests
+                      Go Live & Get Bookings
                     </h4>
                     <p className="text-sm text-orange-700">
-                      You'll receive notifications when someone wants to book your car
+                      Once approved, your car becomes visible to thousands of potential renters
                     </p>
                   </div>
 
@@ -323,7 +361,7 @@ const CarListingSuccess = () => {
                       Start Earning
                     </h4>
                     <p className="text-sm text-green-700">
-                      Approve bookings and start earning money from your car today
+                      Receive booking requests and start earning money from your car
                     </p>
                   </div>
                 </div>

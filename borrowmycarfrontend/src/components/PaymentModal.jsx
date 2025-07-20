@@ -139,6 +139,18 @@ const PaymentModal = ({
     const newErrors = {};
     if (!cashOnPickupForm.meetingTime) {
       newErrors.meetingTime = "Meeting time is required";
+    } else {
+      // Validate meeting time is within booking range
+      const meetingDate = new Date(cashOnPickupForm.meetingTime);
+      const startDate = new Date(bookingData.startDate);
+      const endDate = new Date(bookingData.endDate);
+      const now = new Date();
+      
+      if (meetingDate < now) {
+        newErrors.meetingTime = "Meeting time cannot be in the past";
+      } else if (meetingDate < startDate || meetingDate > endDate) {
+        newErrors.meetingTime = `Meeting time must be between ${startDate.toLocaleDateString()} and ${endDate.toLocaleDateString()}`;
+      }
     }
     if (!cashOnPickupForm.agreeToTerms) {
       newErrors.agreeToTerms = "You must agree to the terms";
@@ -255,6 +267,29 @@ const PaymentModal = ({
     setErrors({});
     setSelectedSavedCard("");
     setShowTimeSelection(true);
+    
+    // Auto-set a sensible meeting time for cash on pickup
+    if (method === "cash_on_pickup" && bookingData?.startDate) {
+      const startDate = new Date(bookingData.startDate);
+      const now = new Date();
+      
+      // If booking starts today, set meeting time to 2 hours from now
+      // Otherwise, set it to 10 AM on the start date
+      let defaultDateTime;
+      if (startDate.toDateString() === now.toDateString()) {
+        const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+        defaultDateTime = twoHoursFromNow.toISOString().slice(0, 16);
+      } else {
+        const startAt10AM = new Date(startDate);
+        startAt10AM.setHours(10, 0, 0, 0);
+        defaultDateTime = startAt10AM.toISOString().slice(0, 16);
+      }
+      
+      setCashOnPickupForm((prev) => ({
+        ...prev,
+        meetingTime: defaultDateTime,
+      }));
+    }
   };
 
   // Handle time selection
@@ -466,17 +501,26 @@ const PaymentModal = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Meeting Time
               </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Select a time between {new Date(bookingData.startDate).toLocaleDateString()} and {new Date(bookingData.endDate).toLocaleDateString()}
+              </p>
               <div className="relative">
                 <Clock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <input
                   type="datetime-local"
                   value={cashOnPickupForm.meetingTime}
-                  onChange={(e) =>
+                  min={new Date(Math.max(new Date(), new Date(bookingData.startDate))).toISOString().slice(0, 16)}
+                  max={new Date(bookingData.endDate).toISOString().slice(0, 16)}
+                  onChange={(e) => {
                     setCashOnPickupForm((prev) => ({
                       ...prev,
                       meetingTime: e.target.value,
-                    }))
-                  }
+                    }));
+                    // Clear error when user starts typing
+                    if (errors.meetingTime) {
+                      setErrors((prev) => ({ ...prev, meetingTime: "" }));
+                    }
+                  }}
                   className={`w-full pl-10 p-3 border rounded-lg ${
                     errors.meetingTime ? "border-red-500" : "border-gray-300"
                   }`}
@@ -530,11 +574,14 @@ const PaymentModal = ({
             )}
 
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="flex items-center">
+              <div className="flex items-center mb-2">
                 <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
-                <span className="text-sm text-yellow-800">
-                  Please bring exact amount: AED {bookingData?.totalAmount || 0}
-                </span>
+                <span className="text-sm font-medium text-yellow-800">Cash Payment Reminder</span>
+              </div>
+              <div className="text-sm text-yellow-700 space-y-1">
+                <p>• Bring exact amount: AED {bookingData?.totalAmount || 0}</p>
+                <p>• Meeting must be within your booking period</p>
+                <p>• Dates: {new Date(bookingData?.startDate).toLocaleDateString()} - {new Date(bookingData?.endDate).toLocaleDateString()}</p>
               </div>
             </div>
           </div>
@@ -649,6 +696,8 @@ const PaymentModal = ({
                 pickupTime={selectedTimes.pickupTime}
                 returnTime={selectedTimes.returnTime}
                 selectedDate={bookingData?.startDate}
+                bookingStartDate={bookingData?.startDate}
+                bookingEndDate={bookingData?.endDate}
                 onTimeChange={handleTimeChange}
                 onError={handleTimeError}
               />
@@ -715,7 +764,8 @@ const PaymentModal = ({
               </h4>
               <div className="text-sm text-yellow-800 space-y-1">
                 <p>• Bring exact amount: AED {totalWithFees}</p>
-                <p>• Meeting location and time are confirmed upon booking</p>
+                <p>• Meeting time must be within booking period: {new Date(bookingData?.startDate).toLocaleDateString()} - {new Date(bookingData?.endDate).toLocaleDateString()}</p>
+                <p>• Meeting location will be confirmed upon booking</p>
                 <p>• Bring valid ID for verification</p>
                 <p>• Late arrival may result in booking cancellation</p>
               </div>

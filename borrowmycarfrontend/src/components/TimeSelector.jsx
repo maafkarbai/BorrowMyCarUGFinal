@@ -8,6 +8,8 @@ const TimeSelector = ({
   onError,
   className = "",
   selectedDate = null,
+  bookingStartDate = null,
+  bookingEndDate = null,
 }) => {
   const [localPickupTime, setLocalPickupTime] = useState(pickupTime || "10:00");
   const [localReturnTime, setLocalReturnTime] = useState(returnTime || "18:00");
@@ -56,6 +58,37 @@ const TimeSelector = ({
     
     if (timeDifferenceHours < minRentalHours) {
       newErrors.general = `Minimum rental duration is ${minRentalHours} hours`;
+    }
+
+    // Validate against booking date range if provided
+    if (bookingStartDate && bookingEndDate && selectedDate) {
+      const currentDate = new Date(selectedDate);
+      const startDate = new Date(bookingStartDate);
+      const endDate = new Date(bookingEndDate);
+      
+      // Check if current date is within booking range
+      if (currentDate < startDate || currentDate > endDate) {
+        newErrors.general = `Meeting date must be within your booking period: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+      }
+      
+      // If it's the start date, pickup time should be reasonable
+      if (currentDate.toDateString() === startDate.toDateString()) {
+        const now = new Date();
+        if (currentDate.toDateString() === now.toDateString()) {
+          // Same day booking - pickup time should be in the future
+          const currentMinutes = now.getHours() * 60 + now.getMinutes();
+          if (pickupMinutes <= currentMinutes + 60) { // At least 1 hour from now
+            newErrors.pickupTime = "Pickup time should be at least 1 hour from now";
+          }
+        }
+      }
+      
+      // If it's the end date, return time should be before end of day
+      if (currentDate.toDateString() === endDate.toDateString()) {
+        if (returnMinutes > 23 * 60 + 30) { // After 11:30 PM
+          newErrors.returnTime = "Return time on the last day should be before 11:30 PM";
+        }
+      }
     }
 
     return newErrors;
@@ -165,6 +198,18 @@ const TimeSelector = ({
         </div>
       )}
 
+      {bookingStartDate && bookingEndDate && (
+        <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+          <h4 className="text-sm font-medium text-green-800 mb-1">Booking Period</h4>
+          <p className="text-xs text-green-700">
+            {new Date(bookingStartDate).toLocaleDateString()} - {new Date(bookingEndDate).toLocaleDateString()}
+          </p>
+          <p className="text-xs text-green-600 mt-1">
+            Meeting times must be within this period
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Pickup Time */}
         <div>
@@ -237,6 +282,10 @@ const TimeSelector = ({
           <li>• Available times: 6:00 AM - 11:30 PM</li>
           <li>• Return time must be after pickup time</li>
           <li>• Times are shown in 30-minute intervals</li>
+          {bookingStartDate && bookingEndDate && (
+            <li>• Meeting times must be within your booking period</li>
+          )}
+          <li>• Same-day pickups require at least 1 hour advance notice</li>
         </ul>
       </div>
     </div>

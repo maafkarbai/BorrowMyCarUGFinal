@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd:*)"
+      "Bash(npm run lint)",
+      "Bash(bun run lint:*)"
     ],
     "deny": []
   }

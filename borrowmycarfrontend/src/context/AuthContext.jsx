@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect } from "react";
+import { createContext, useContext, useReducer, useEffect, useRef } from "react";
 import API from "../api";
 
 const AuthContext = createContext();
@@ -49,13 +49,14 @@ const initialState = {
 
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const isCheckingAuthRef = useRef(false);
 
   // Check authentication status on app start
   useEffect(() => {
     let isMounted = true;
     
     const checkAuthStatus = async () => {
-      if (isMounted) {
+      if (isMounted && !isCheckingAuthRef.current) {
         await checkAuth(isMounted);
       }
     };
@@ -69,6 +70,11 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async (isMounted = true) => {
+    // Prevent multiple simultaneous auth checks
+    if (isCheckingAuthRef.current) return;
+    
+    isCheckingAuthRef.current = true;
+    
     try {
       if (isMounted) dispatch({ type: "SET_LOADING", payload: true });
       
@@ -86,7 +92,7 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       if (isMounted) {
-        // Only logout if it's not a network error
+        // Only logout if it's an authentication error
         if (error.response?.status === 401 || error.response?.status === 403) {
           dispatch({ type: "LOGOUT" });
         } else {
@@ -98,6 +104,7 @@ export const AuthProvider = ({ children }) => {
       if (isMounted) {
         dispatch({ type: "SET_LOADING", payload: false });
       }
+      isCheckingAuthRef.current = false;
     }
   };
 
@@ -203,12 +210,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    try {
-      await API.post("/auth/logout");
-    } catch (error) {
-      // Continue with logout even if API call fails
-    }
+    // First dispatch logout to update UI immediately
     dispatch({ type: "LOGOUT" });
+    
+    try {
+      // Then call the logout API
+      await API.post("/auth/logout");
+    } catch {
+      // Continue with logout even if API call fails
+      console.log("Logout API call failed, but continuing with local logout");
+    }
   };
 
   const clearError = () => {

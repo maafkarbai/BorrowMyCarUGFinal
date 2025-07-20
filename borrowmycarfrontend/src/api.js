@@ -58,25 +58,36 @@ API.interceptors.response.use(
       const { status, data } = error.response;
 
       switch (status) {
-        case 401:
+        case 401: {
           // Unauthorized - redirect to login (cookies cleared by server)
           console.log("🔐 Authentication failed - redirecting to login");
 
+          // Check if this is a logout request or profile check
+          const isLogoutRequest = error.config?.url?.includes('/auth/logout');
+          const isProfileCheck = error.config?.url?.includes('/auth/profile');
+          
           // Only redirect if not already on auth pages and not during initial app load
           const currentPath = window.location.pathname;
           if (
+            !isLogoutRequest && // Don't redirect on logout requests
             !currentPath.includes("/login") &&
             !currentPath.includes("/signup") &&
             !currentPath.includes("/auth") &&
             !currentPath.includes("/forgot-password") &&
             document.readyState === 'complete' // Only redirect after page is fully loaded
           ) {
-            // Longer delay to prevent redirect loops during auth checks
-            setTimeout(() => {
-              window.location.href = "/login";
-            }, 500);
+            // Skip redirect if this is a profile check that happens during logout
+            if (isProfileCheck && window.location.pathname === '/') {
+              console.log("Skipping redirect - likely during logout flow");
+            } else {
+              // Longer delay to prevent redirect loops during auth checks
+              setTimeout(() => {
+                window.location.href = "/login";
+              }, 500);
+            }
           }
           break;
+        }
 
         case 403:
           console.log("🚫 Access forbidden");

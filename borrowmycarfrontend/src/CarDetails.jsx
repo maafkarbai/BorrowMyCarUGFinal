@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "./api";
 import PaymentModal from "./components/PaymentModal";
-import DatePicker from "./components/DatePicker";
+import TimeSelector from "./components/TimeSelector";
 import { useAuth } from "./context/AuthContext";
 
 const CarDetails = () => {
@@ -14,8 +14,9 @@ const CarDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [booking, setBooking] = useState({
-    startDate: "",
-    endDate: "",
+    selectedDate: "",
+    pickupTime: "10:00",
+    returnTime: "18:00",
   });
   const [bookingError, setBookingError] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -41,18 +42,21 @@ const CarDetails = () => {
     fetchCar();
   }, [id]);
 
-  // Calculate total cost and days when dates change
+  // Calculate total cost based on hourly rate when times change
   useEffect(() => {
-    if (booking.startDate && booking.endDate && car) {
-      const start = new Date(booking.startDate);
-      const end = new Date(booking.endDate);
-      const diffTime = Math.abs(end - start);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays > 0) {
-        setNumberOfDays(diffDays);
+    if (booking.selectedDate && booking.pickupTime && booking.returnTime && car) {
+      const pickupMinutes = convertTimeToMinutes(booking.pickupTime);
+      const returnMinutes = convertTimeToMinutes(booking.returnTime);
+      const durationMinutes = returnMinutes - pickupMinutes;
+      
+      if (durationMinutes > 0) {
+        const durationHours = durationMinutes / 60;
+        setNumberOfDays(durationHours);
+        
+        // Calculate hourly rate from daily rate (assuming 8 hours per day)
         const dailyRate = car.price || car.pricePerDay;
-        const subtotal = diffDays * dailyRate;
+        const hourlyRate = dailyRate / 8;
+        const subtotal = Math.round(durationHours * hourlyRate);
         const serviceFee = Math.round(subtotal * 0.05); // 5% service fee
         const insurance = Math.round(subtotal * 0.03); // 3% insurance
         const total = subtotal + serviceFee + insurance;
@@ -66,7 +70,13 @@ const CarDetails = () => {
       setNumberOfDays(0);
       setTotalCost(0);
     }
-  }, [booking.startDate, booking.endDate, car]);
+  }, [booking.selectedDate, booking.pickupTime, booking.returnTime, car]);
+
+  // Convert time string to minutes for calculation
+  const convertTimeToMinutes = (timeString) => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
 
   const _handleBookingChange = (e) => {
     const { name, value } = e.target;
@@ -77,94 +87,94 @@ const CarDetails = () => {
     setBookingError("");
   };
 
-  const handleDatePickerChange = ({ startDate, endDate }) => {
+  const handleTimeChange = ({ pickupTime, returnTime }) => {
     setBooking((prev) => ({
       ...prev,
-      startDate: startDate || "",
-      endDate: endDate || "",
+      pickupTime,
+      returnTime,
     }));
     setBookingError("");
   };
 
-  const handleDatePickerError = (error) => {
+  const handleTimeError = (error) => {
     setBookingError(error);
   };
 
-  const validateBookingDates = async () => {
-    if (!booking.startDate || !booking.endDate) {
-      setBookingError("Please select both start and end dates");
+  const handleDateChange = (e) => {
+    setBooking((prev) => ({
+      ...prev,
+      selectedDate: e.target.value,
+    }));
+    setBookingError("");
+  };
+
+  const validateBooking = async () => {
+    if (!booking.selectedDate) {
+      setBookingError("Please select a date");
       return false;
     }
 
-    const start = new Date(booking.startDate);
-    const end = new Date(booking.endDate);
+    if (!booking.pickupTime || !booking.returnTime) {
+      setBookingError("Please select both pickup and return times");
+      return false;
+    }
+
+    const selectedDate = new Date(booking.selectedDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (start < today) {
-      setBookingError("Start date cannot be in the past");
-      return false;
-    }
-
-    if (start >= end) {
-      setBookingError("End date must be after start date");
+    if (selectedDate < today) {
+      setBookingError("Selected date cannot be in the past");
       return false;
     }
 
     const availableFrom = new Date(car.availabilityFrom);
     const availableTo = new Date(car.availabilityTo);
 
-    if (start < availableFrom || end > availableTo) {
+    if (selectedDate < availableFrom || selectedDate > availableTo) {
       setBookingError(
-        `Selected dates must be between ${availableFrom.toLocaleDateString()} and ${availableTo.toLocaleDateString()}`
+        `Selected date must be between ${availableFrom.toLocaleDateString()} and ${availableTo.toLocaleDateString()}`
       );
       return false;
     }
 
-    // Check minimum rental days
-    const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const minimumDays = car.minimumRentalDays || 1;
-    const maximumDays = car.maximumRentalDays || 30;
+    // Check minimum rental hours
+    const pickupMinutes = convertTimeToMinutes(booking.pickupTime);
+    const returnMinutes = convertTimeToMinutes(booking.returnTime);
+    const durationHours = (returnMinutes - pickupMinutes) / 60;
+    const minimumHours = 2;
 
-    if (diffDays < minimumDays) {
+    if (durationHours < minimumHours) {
       setBookingError(
-        `Minimum rental period is ${minimumDays} day${
-          minimumDays !== 1 ? "s" : ""
-        }`
+        `Minimum rental duration is ${minimumHours} hours`
       );
       return false;
     }
 
-    if (diffDays > maximumDays) {
-      setBookingError(
-        `Maximum rental period is ${maximumDays} day${
-          maximumDays !== 1 ? "s" : ""
-        }`
-      );
+    if (returnMinutes <= pickupMinutes) {
+      setBookingError("Return time must be after pickup time");
       return false;
     }
 
-    // Real-time availability check to prevent double booking
+    // Real-time availability check for the selected date
     try {
       const response = await API.get(`/cars/${car._id}/availability`);
       const { unavailableDates } = response.data.data;
 
-      // Check if selected dates overlap with any existing bookings
-      const selectedStart = start.getTime();
-      const selectedEnd = end.getTime();
+      // Check if selected date conflicts with any existing bookings
+      const selectedDateString = booking.selectedDate;
+      
+      const hasConflict = unavailableDates.some((existingBooking) => {
+        const bookingStart = new Date(existingBooking.startDate).toDateString();
+        const bookingEnd = new Date(existingBooking.endDate).toDateString();
+        const selectedDateStr = selectedDate.toDateString();
 
-      const hasConflict = unavailableDates.some((booking) => {
-        const bookingStart = new Date(booking.startDate).getTime();
-        const bookingEnd = new Date(booking.endDate).getTime();
-
-        // Check for any overlap
-        return selectedStart < bookingEnd && selectedEnd > bookingStart;
+        return selectedDateStr >= bookingStart && selectedDateStr <= bookingEnd;
       });
 
       if (hasConflict) {
         setBookingError(
-          "Selected dates conflict with existing bookings. Please choose different dates."
+          "Selected date conflicts with existing bookings. Please choose a different date."
         );
         return false;
       }
@@ -180,14 +190,18 @@ const CarDetails = () => {
   const handleBook = async (e) => {
     e.preventDefault();
 
-    const isValid = await validateBookingDates();
+    const isValid = await validateBooking();
     if (!isValid) {
       return;
     }
 
     // Prepare payment data
     const dailyRate = car.price || car.pricePerDay;
-    const subtotal = numberOfDays * dailyRate;
+    const hourlyRate = dailyRate / 8;
+    const pickupMinutes = convertTimeToMinutes(booking.pickupTime);
+    const returnMinutes = convertTimeToMinutes(booking.returnTime);
+    const durationHours = (returnMinutes - pickupMinutes) / 60;
+    const subtotal = Math.round(durationHours * hourlyRate);
     const serviceFee = Math.round(subtotal * 0.05);
     const insurance = Math.round(subtotal * 0.03);
     const total = subtotal + serviceFee + insurance;
@@ -198,12 +212,14 @@ const CarDetails = () => {
       carTitle: car.title,
       carImage: car.images?.[0],
       carLocation: car.city,
-      startDate: booking.startDate,
-      endDate: booking.endDate,
-      numberOfDays: numberOfDays,
+      selectedDate: booking.selectedDate,
+      pickupTime: booking.pickupTime,
+      returnTime: booking.returnTime,
+      durationHours: durationHours,
 
       // Pricing breakdown
       dailyRate: dailyRate,
+      hourlyRate: hourlyRate,
       subtotal: subtotal,
       serviceFee: serviceFee,
       insurance: insurance,
@@ -230,10 +246,11 @@ const CarDetails = () => {
       // Create the actual booking with payment info
       const bookingPayload = {
         carId: car._id,
-        startDate: booking.startDate,
-        endDate: booking.endDate,
+        selectedDate: booking.selectedDate,
+        pickupTime: booking.pickupTime,
+        returnTime: booking.returnTime,
         totalCost: paymentData.totalAmount,
-        numberOfDays: numberOfDays,
+        durationHours: paymentData.durationHours,
         paymentMethod: paymentResult.paymentMethod,
         paymentId: paymentResult.paymentId,
         paymentStatus: paymentResult.status || "completed",
@@ -720,24 +737,42 @@ const CarDetails = () => {
                     Book This Car
                   </h2>
                   <form onSubmit={handleBook} className="space-y-4">
-                    <DatePicker
-                      carId={car._id}
-                      startDate={booking.startDate}
-                      endDate={booking.endDate}
-                      onDateChange={handleDatePickerChange}
-                      onError={handleDatePickerError}
-                    />
+                    {/* Date Selection */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Date
+                      </label>
+                      <input
+                        type="date"
+                        value={booking.selectedDate}
+                        onChange={handleDateChange}
+                        min={new Date().toISOString().split('T')[0]}
+                        max={new Date(car.availabilityTo).toISOString().split('T')[0]}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    {/* Time Selection */}
+                    {booking.selectedDate && (
+                      <TimeSelector
+                        pickupTime={booking.pickupTime}
+                        returnTime={booking.returnTime}
+                        selectedDate={booking.selectedDate}
+                        onTimeChange={handleTimeChange}
+                        onError={handleTimeError}
+                      />
+                    )}
 
                     {/* Cost Breakdown */}
-                    {numberOfDays > 0 && (
+                    {numberOfDays > 0 && booking.selectedDate && (
                       <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>
-                            AED {car.price || car.pricePerDay} × {numberOfDays}{" "}
-                            day{numberOfDays !== 1 ? "s" : ""}
+                            AED {Math.round((car.price || car.pricePerDay) / 8)} × {numberOfDays.toFixed(1)}{" "}
+                            hour{numberOfDays !== 1 ? "s" : ""}
                           </span>
                           <span>
-                            AED {numberOfDays * (car.price || car.pricePerDay)}
+                            AED {Math.round(numberOfDays * ((car.price || car.pricePerDay) / 8))}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm text-gray-600">
@@ -746,7 +781,7 @@ const CarDetails = () => {
                             AED{" "}
                             {Math.round(
                               numberOfDays *
-                                (car.price || car.pricePerDay) *
+                                ((car.price || car.pricePerDay) / 8) *
                                 0.05
                             )}
                           </span>
@@ -757,7 +792,7 @@ const CarDetails = () => {
                             AED{" "}
                             {Math.round(
                               numberOfDays *
-                                (car.price || car.pricePerDay) *
+                                ((car.price || car.pricePerDay) / 8) *
                                 0.03
                             )}
                           </span>
@@ -779,7 +814,7 @@ const CarDetails = () => {
 
                     <button
                       type="submit"
-                      disabled={bookingLoading || numberOfDays === 0}
+                      disabled={bookingLoading || numberOfDays === 0 || !booking.selectedDate}
                       className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
                     >
                       {bookingLoading ? (

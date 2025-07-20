@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "./api";
 import PaymentModal from "./components/PaymentModal";
-import TimeSelector from "./components/TimeSelector";
+import DateRangePicker from "./components/DateRangePicker";
 import { useAuth } from "./context/AuthContext";
 
 const CarDetails = () => {
@@ -14,9 +14,12 @@ const CarDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [booking, setBooking] = useState({
-    selectedDate: "",
+    startDate: "",
+    endDate: "",
     pickupTime: "10:00",
     returnTime: "18:00",
+    pickupLocation: null,
+    returnLocation: null
   });
   const [bookingError, setBookingError] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -42,21 +45,19 @@ const CarDetails = () => {
     fetchCar();
   }, [id]);
 
-  // Calculate total cost based on hourly rate when times change
+  // Calculate total cost based on date range
   useEffect(() => {
-    if (booking.selectedDate && booking.pickupTime && booking.returnTime && car) {
-      const pickupMinutes = convertTimeToMinutes(booking.pickupTime);
-      const returnMinutes = convertTimeToMinutes(booking.returnTime);
-      const durationMinutes = returnMinutes - pickupMinutes;
+    if (booking.startDate && booking.endDate && car) {
+      const startDate = new Date(booking.startDate);
+      const endDate = new Date(booking.endDate);
+      const timeDiff = endDate.getTime() - startDate.getTime();
+      const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
       
-      if (durationMinutes > 0) {
-        const durationHours = durationMinutes / 60;
-        setNumberOfDays(durationHours);
+      if (daysDiff > 0) {
+        setNumberOfDays(daysDiff);
         
-        // Calculate hourly rate from daily rate (assuming 8 hours per day)
         const dailyRate = car.price || car.pricePerDay;
-        const hourlyRate = dailyRate / 8;
-        const subtotal = Math.round(durationHours * hourlyRate);
+        const subtotal = Math.round(daysDiff * dailyRate);
         const serviceFee = Math.round(subtotal * 0.05); // 5% service fee
         const insurance = Math.round(subtotal * 0.03); // 3% insurance
         const total = subtotal + serviceFee + insurance;
@@ -70,7 +71,7 @@ const CarDetails = () => {
       setNumberOfDays(0);
       setTotalCost(0);
     }
-  }, [booking.selectedDate, booking.pickupTime, booking.returnTime, car]);
+  }, [booking.startDate, booking.endDate, car]);
 
   // Convert time string to minutes for calculation
   const convertTimeToMinutes = (timeString) => {
@@ -78,103 +79,127 @@ const CarDetails = () => {
     return hours * 60 + minutes;
   };
 
-  const _handleBookingChange = (e) => {
-    const { name, value } = e.target;
+
+  const handleDateRangeChange = (bookingData) => {
     setBooking((prev) => ({
       ...prev,
-      [name]: value,
+      startDate: bookingData.startDate || "",
+      endDate: bookingData.endDate || "",
+      pickupTime: bookingData.pickupTime || prev.pickupTime,
+      returnTime: bookingData.returnTime || prev.returnTime,
+      pickupLocation: bookingData.pickupLocation !== undefined ? bookingData.pickupLocation : prev.pickupLocation,
+      returnLocation: bookingData.returnLocation !== undefined ? bookingData.returnLocation : prev.returnLocation
     }));
     setBookingError("");
   };
 
-  const handleTimeChange = ({ pickupTime, returnTime }) => {
-    setBooking((prev) => ({
-      ...prev,
-      pickupTime,
-      returnTime,
-    }));
-    setBookingError("");
-  };
-
-  const handleTimeError = (error) => {
+  const handleDateError = (error) => {
     setBookingError(error);
   };
 
-  const handleDateChange = (e) => {
-    setBooking((prev) => ({
-      ...prev,
-      selectedDate: e.target.value,
-    }));
+  const setQuickDate = (type) => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const dayAfter = new Date(today);
+    dayAfter.setDate(today.getDate() + 2);
+    
+    const formatDate = (date) => date.toISOString().split('T')[0];
+    
+    switch (type) {
+      case 'today':
+        setBooking(prev => ({
+          ...prev,
+          startDate: formatDate(today),
+          endDate: formatDate(tomorrow)
+        }));
+        break;
+      case 'tomorrow':
+        setBooking(prev => ({
+          ...prev,
+          startDate: formatDate(tomorrow),
+          endDate: formatDate(dayAfter)
+        }));
+        break;
+      case 'weekend':
+        const friday = new Date(today);
+        const sunday = new Date(today);
+        const daysUntilFriday = (5 - today.getDay() + 7) % 7;
+        friday.setDate(today.getDate() + daysUntilFriday);
+        sunday.setDate(friday.getDate() + 2);
+        setBooking(prev => ({
+          ...prev,
+          startDate: formatDate(friday),
+          endDate: formatDate(sunday)
+        }));
+        break;
+    }
     setBookingError("");
   };
 
   const validateBooking = async () => {
-    if (!booking.selectedDate) {
-      setBookingError("Please select a date");
+    if (!booking.startDate || !booking.endDate) {
+      setBookingError("Please select start and end dates");
       return false;
     }
 
-    if (!booking.pickupTime || !booking.returnTime) {
-      setBookingError("Please select both pickup and return times");
-      return false;
-    }
-
-    const selectedDate = new Date(booking.selectedDate);
+    const startDate = new Date(booking.startDate);
+    const endDate = new Date(booking.endDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (selectedDate < today) {
-      setBookingError("Selected date cannot be in the past");
+    if (startDate < today) {
+      setBookingError("Start date cannot be in the past");
+      return false;
+    }
+
+    if (endDate <= startDate) {
+      setBookingError("End date must be after start date");
       return false;
     }
 
     const availableFrom = new Date(car.availabilityFrom);
     const availableTo = new Date(car.availabilityTo);
 
-    if (selectedDate < availableFrom || selectedDate > availableTo) {
+    if (startDate < availableFrom || endDate > availableTo) {
       setBookingError(
-        `Selected date must be between ${availableFrom.toLocaleDateString()} and ${availableTo.toLocaleDateString()}`
+        `Selected dates must be between ${availableFrom.toLocaleDateString()} and ${availableTo.toLocaleDateString()}`
       );
       return false;
     }
 
-    // Check minimum rental hours
-    const pickupMinutes = convertTimeToMinutes(booking.pickupTime);
-    const returnMinutes = convertTimeToMinutes(booking.returnTime);
-    const durationHours = (returnMinutes - pickupMinutes) / 60;
-    const minimumHours = 2;
+    // Check minimum rental days
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    const minimumDays = 1;
 
-    if (durationHours < minimumHours) {
+    if (daysDiff < minimumDays) {
       setBookingError(
-        `Minimum rental duration is ${minimumHours} hours`
+        `Minimum rental duration is ${minimumDays} day${minimumDays !== 1 ? 's' : ''}`
       );
       return false;
     }
 
-    if (returnMinutes <= pickupMinutes) {
-      setBookingError("Return time must be after pickup time");
-      return false;
-    }
-
-    // Real-time availability check for the selected date
+    // Real-time availability check for the selected date range
     try {
       const response = await API.get(`/cars/${car._id}/availability`);
       const { unavailableDates } = response.data.data;
 
-      // Check if selected date conflicts with any existing bookings
-      const selectedDateString = booking.selectedDate;
-      
+      // Check if selected date range conflicts with any existing bookings
       const hasConflict = unavailableDates.some((existingBooking) => {
-        const bookingStart = new Date(existingBooking.startDate).toDateString();
-        const bookingEnd = new Date(existingBooking.endDate).toDateString();
-        const selectedDateStr = selectedDate.toDateString();
+        const bookingStart = new Date(existingBooking.startDate);
+        const bookingEnd = new Date(existingBooking.endDate);
 
-        return selectedDateStr >= bookingStart && selectedDateStr <= bookingEnd;
+        return (
+          (startDate >= bookingStart && startDate < bookingEnd) ||
+          (endDate > bookingStart && endDate <= bookingEnd) ||
+          (startDate <= bookingStart && endDate >= bookingEnd)
+        );
       });
 
       if (hasConflict) {
         setBookingError(
-          "Selected date conflicts with existing bookings. Please choose a different date."
+          "Selected date range conflicts with existing bookings. Please choose different dates."
         );
         return false;
       }
@@ -197,11 +222,11 @@ const CarDetails = () => {
 
     // Prepare payment data
     const dailyRate = car.price || car.pricePerDay;
-    const hourlyRate = dailyRate / 8;
-    const pickupMinutes = convertTimeToMinutes(booking.pickupTime);
-    const returnMinutes = convertTimeToMinutes(booking.returnTime);
-    const durationHours = (returnMinutes - pickupMinutes) / 60;
-    const subtotal = Math.round(durationHours * hourlyRate);
+    const startDate = new Date(booking.startDate);
+    const endDate = new Date(booking.endDate);
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    const subtotal = Math.round(daysDiff * dailyRate);
     const serviceFee = Math.round(subtotal * 0.05);
     const insurance = Math.round(subtotal * 0.03);
     const total = subtotal + serviceFee + insurance;
@@ -212,14 +237,12 @@ const CarDetails = () => {
       carTitle: car.title,
       carImage: car.images?.[0],
       carLocation: car.city,
-      selectedDate: booking.selectedDate,
-      pickupTime: booking.pickupTime,
-      returnTime: booking.returnTime,
-      durationHours: durationHours,
+      startDate: booking.startDate,
+      endDate: booking.endDate,
+      numberOfDays: daysDiff,
 
       // Pricing breakdown
       dailyRate: dailyRate,
-      hourlyRate: hourlyRate,
       subtotal: subtotal,
       serviceFee: serviceFee,
       insurance: insurance,
@@ -246,11 +269,14 @@ const CarDetails = () => {
       // Create the actual booking with payment info
       const bookingPayload = {
         carId: car._id,
-        selectedDate: booking.selectedDate,
-        pickupTime: booking.pickupTime,
-        returnTime: booking.returnTime,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        pickupTime: booking.pickupTime || "10:00",
+        returnTime: booking.returnTime || "18:00",
+        pickupLocation: booking.pickupLocation,
+        returnLocation: booking.returnLocation,
         totalCost: paymentData.totalAmount,
-        durationHours: paymentData.durationHours,
+        totalDays: paymentData.numberOfDays,
         paymentMethod: paymentResult.paymentMethod,
         paymentId: paymentResult.paymentId,
         paymentStatus: paymentResult.status || "completed",
@@ -737,42 +763,55 @@ const CarDetails = () => {
                     Book This Car
                   </h2>
                   <form onSubmit={handleBook} className="space-y-4">
-                    {/* Date Selection */}
+                    {/* Quick Date Selection Buttons */}
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Date
+                        Quick Select
                       </label>
-                      <input
-                        type="date"
-                        value={booking.selectedDate}
-                        onChange={handleDateChange}
-                        min={new Date().toISOString().split('T')[0]}
-                        max={new Date(car.availabilityTo).toISOString().split('T')[0]}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => setQuickDate('today')}
+                          className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
+                        >
+                          Today - Tomorrow
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuickDate('tomorrow')}
+                          className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                        >
+                          Tomorrow +1
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuickDate('weekend')}
+                          className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
+                        >
+                          This Weekend
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Time Selection */}
-                    {booking.selectedDate && (
-                      <TimeSelector
-                        pickupTime={booking.pickupTime}
-                        returnTime={booking.returnTime}
-                        selectedDate={booking.selectedDate}
-                        onTimeChange={handleTimeChange}
-                        onError={handleTimeError}
-                      />
-                    )}
+                    {/* Date Range Selection */}
+                    <DateRangePicker
+                      carId={car._id}
+                      startDate={booking.startDate}
+                      endDate={booking.endDate}
+                      onDateChange={handleDateRangeChange}
+                      onError={handleDateError}
+                    />
 
                     {/* Cost Breakdown */}
-                    {numberOfDays > 0 && booking.selectedDate && (
+                    {numberOfDays > 0 && booking.startDate && booking.endDate && (
                       <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>
-                            AED {Math.round((car.price || car.pricePerDay) / 8)} × {numberOfDays.toFixed(1)}{" "}
-                            hour{numberOfDays !== 1 ? "s" : ""}
+                            AED {car.price || car.pricePerDay} × {numberOfDays}{" "}
+                            day{numberOfDays !== 1 ? "s" : ""}
                           </span>
                           <span>
-                            AED {Math.round(numberOfDays * ((car.price || car.pricePerDay) / 8))}
+                            AED {Math.round(numberOfDays * (car.price || car.pricePerDay))}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm text-gray-600">
@@ -781,7 +820,7 @@ const CarDetails = () => {
                             AED{" "}
                             {Math.round(
                               numberOfDays *
-                                ((car.price || car.pricePerDay) / 8) *
+                                (car.price || car.pricePerDay) *
                                 0.05
                             )}
                           </span>
@@ -792,7 +831,7 @@ const CarDetails = () => {
                             AED{" "}
                             {Math.round(
                               numberOfDays *
-                                ((car.price || car.pricePerDay) / 8) *
+                                (car.price || car.pricePerDay) *
                                 0.03
                             )}
                           </span>
@@ -814,7 +853,7 @@ const CarDetails = () => {
 
                     <button
                       type="submit"
-                      disabled={bookingLoading || numberOfDays === 0 || !booking.selectedDate}
+                      disabled={bookingLoading || numberOfDays === 0 || !booking.startDate || !booking.endDate}
                       className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
                     >
                       {bookingLoading ? (

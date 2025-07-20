@@ -11,6 +11,7 @@ import {
   Banknote,
 } from "lucide-react";
 import API from "../api";
+import TimeSelector from "./TimeSelector";
 
 const PaymentModal = ({
   isOpen,
@@ -21,6 +22,12 @@ const PaymentModal = ({
 }) => {
   const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [processing, setProcessing] = useState(false);
+  const [showTimeSelection, setShowTimeSelection] = useState(false);
+  const [selectedTimes, setSelectedTimes] = useState({
+    pickupTime: "10:00",
+    returnTime: "18:00",
+  });
+  const [timeError, setTimeError] = useState("");
 
   // Form states
   const [cardForm, setCardForm] = useState({
@@ -198,6 +205,8 @@ const PaymentModal = ({
         startDate: bookingData.startDate,
         endDate: bookingData.endDate,
         numberOfDays: bookingData.numberOfDays,
+        pickupTime: selectedTimes.pickupTime,
+        returnTime: selectedTimes.returnTime,
       };
 
       let isValid = false;
@@ -250,6 +259,17 @@ const PaymentModal = ({
     setPaymentMethod(method);
     setErrors({});
     setSelectedSavedCard("");
+    setShowTimeSelection(true);
+  };
+
+  // Handle time selection
+  const handleTimeChange = ({ pickupTime, returnTime }) => {
+    setSelectedTimes({ pickupTime, returnTime });
+    setTimeError("");
+  };
+
+  const handleTimeError = (error) => {
+    setTimeError(error);
   };
 
   // Render payment form based on selected method
@@ -651,11 +671,37 @@ const PaymentModal = ({
             </div>
           </div>
 
+          {/* Time Selection - appears after payment method is selected */}
+          {showTimeSelection && (
+            <div className="mb-6">
+              <h3 className="font-medium mb-4">Select Meeting Time</h3>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-800">
+                  Please select the time for meeting with the car owner for pickup and return.
+                </p>
+              </div>
+              <TimeSelector
+                pickupTime={selectedTimes.pickupTime}
+                returnTime={selectedTimes.returnTime}
+                selectedDate={bookingData?.startDate}
+                onTimeChange={handleTimeChange}
+                onError={handleTimeError}
+              />
+              {timeError && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{timeError}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Payment Form */}
-          <div className="mb-6">
-            <h3 className="font-medium mb-4">Payment Details</h3>
-            {renderPaymentForm()}
-          </div>
+          {showTimeSelection && (
+            <div className="mb-6">
+              <h3 className="font-medium mb-4">Payment Details</h3>
+              {renderPaymentForm()}
+            </div>
+          )}
 
           {/* Security Notice */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
@@ -679,7 +725,7 @@ const PaymentModal = ({
             </button>
             <button
               onClick={processPayment}
-              disabled={processing}
+              disabled={processing || !showTimeSelection || timeError}
               className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center"
             >
               {processing ? (

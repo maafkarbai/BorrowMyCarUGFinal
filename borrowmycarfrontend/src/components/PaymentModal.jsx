@@ -6,7 +6,6 @@ import {
   Lock,
   CheckCircle,
   AlertCircle,
-  MapPin,
   Clock,
   Banknote,
 } from "lucide-react";
@@ -40,7 +39,6 @@ const PaymentModal = ({
 
 
   const [cashOnPickupForm, setCashOnPickupForm] = useState({
-    meetingLocation: "",
     meetingTime: "",
     notes: "",
     agreeToTerms: false,
@@ -139,9 +137,6 @@ const PaymentModal = ({
 
   const validateCashOnPickup = () => {
     const newErrors = {};
-    if (!cashOnPickupForm.meetingLocation.trim()) {
-      newErrors.meetingLocation = "Meeting location is required";
-    }
     if (!cashOnPickupForm.meetingTime) {
       newErrors.meetingTime = "Meeting time is required";
     }
@@ -467,36 +462,6 @@ const PaymentModal = ({
       case "cash_on_pickup":
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Meeting Location
-              </label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Enter meeting location"
-                  value={cashOnPickupForm.meetingLocation}
-                  onChange={(e) =>
-                    setCashOnPickupForm((prev) => ({
-                      ...prev,
-                      meetingLocation: e.target.value,
-                    }))
-                  }
-                  className={`w-full pl-10 p-3 border rounded-lg ${
-                    errors.meetingLocation
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                />
-              </div>
-              {errors.meetingLocation && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.meetingLocation}
-                </p>
-              )}
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Meeting Time

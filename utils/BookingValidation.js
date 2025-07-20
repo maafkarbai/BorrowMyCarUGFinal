@@ -54,10 +54,7 @@ export const validateBookingForm = (booking, car) => {
   // Validate payment method is one of the accepted values
   if (
     booking.paymentMethod &&
-    ![
-      "Card",
-      "Cash",
-    ].includes(booking.paymentMethod)
+    !["Card", "Cash"].includes(booking.paymentMethod)
   ) {
     errors.paymentMethod = "Invalid payment method selected";
   }
@@ -103,15 +100,15 @@ export const formatPaymentMethod = (method) => {
 
 export const getPaymentMethodIcon = (method) => {
   if (method === "cash_on_delivery" || method === "cash") {
-    return "💵"; // Cash emoji
+    return "💵";
   }
   if (method === "paypal") {
-    return "🅿️"; // PayPal emoji
+    return "🅿️";
   }
   if (method === "bank_transfer") {
-    return "🏦"; // Bank emoji
+    return "🏦";
   }
-  return "💳"; // Card emoji
+  return "💳";
 };
 
 // Validation for car listing form (bonus utility)

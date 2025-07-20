@@ -1,6 +1,6 @@
-const { vi } = require('vitest');
-const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
+import { vi, beforeAll, afterAll, afterEach } from 'vitest';
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let mongoServer;
 

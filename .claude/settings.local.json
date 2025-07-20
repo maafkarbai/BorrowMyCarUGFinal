@@ -4,7 +4,9 @@
       "Bash(bun run lint:*)",
       "Bash(bun run:*)",
       "Bash(timeout:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(rm:*)",
+      "Bash(npx vitest run:*)"
     ],
     "deny": []
   }

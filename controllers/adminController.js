@@ -4,6 +4,7 @@ import Car from "../models/Car.js";
 import Booking from "../models/Booking.js";
 import Notification from "../models/Notification.js";
 import { handleAsyncError } from "../utils/errorHandler.js";
+import EmailService from "../utils/emailService.js";
 
 // ADMIN DASHBOARD STATS
 export const getAdminStats = handleAsyncError(async (req, res) => {
@@ -531,8 +532,7 @@ export const deleteCar = handleAsyncError(async (req, res) => {
 
   // If force deleting with active bookings, cancel them first
   if (activeBookings.length > 0 && force === "true") {
-    // Import email service
-    const EmailService = (await import("../utils/emailService.js")).default;
+    // Initialize email service
     const emailService = new EmailService();
 
     // Populate bookings with user and car details for emails
@@ -551,40 +551,45 @@ export const deleteCar = handleAsyncError(async (req, res) => {
       {
         status: "cancelled",
         cancellationReason: "Car removed from platform by administrator",
-        cancelledBy: req.user.id,
+        cancelledBy: req.user._id,
         cancelledAt: new Date(),
       }
     );
 
     // Send notifications and emails to affected users
     for (const booking of populatedBookings) {
-      // Create notification
-      await Notification.create({
-        user: booking.renter._id,
-        type: "booking_cancelled",
-        title: "Booking Cancelled - Car No Longer Available",
-        message: `Your booking for ${booking.car.title} has been cancelled as the car has been removed from the platform by our administrators.`,
-        data: { bookingId: booking._id },
-      });
+      try {
+        // Create notification
+        await Notification.create({
+          user: booking.renter._id,
+          type: "booking_cancelled",
+          title: "Booking Cancelled - Car No Longer Available",
+          message: `Your booking for ${booking.car.title} has been cancelled as the car has been removed from the platform by our administrators.`,
+          data: { bookingId: booking._id },
+        });
 
-      // Send cancellation email
-      const bookingData = {
-        carBrand: booking.car.make,
-        carModel: booking.car.model,
-        carTitle: booking.car.title,
-        startDate: booking.startDate,
-        endDate: booking.endDate,
-        duration: Math.ceil((new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60 * 60 * 24)),
-        totalAmount: booking.totalPayable,
-        bookingId: booking._id,
-        renterName: booking.renter.name,
-      };
+        // Send cancellation email
+        const bookingData = {
+          carBrand: booking.car.make,
+          carModel: booking.car.model,
+          carTitle: booking.car.title,
+          startDate: booking.startDate,
+          endDate: booking.endDate,
+          duration: Math.ceil((new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60 * 60 * 24)),
+          totalAmount: booking.totalPayable,
+          bookingId: booking._id,
+          renterName: booking.renter.name,
+        };
 
-      await emailService.sendBookingCancellationEmail(
-        booking.renter.email,
-        bookingData,
-        "The car owner has removed this listing from our platform. We apologize for any inconvenience caused."
-      );
+        await emailService.sendBookingCancellationEmail(
+          booking.renter.email,
+          bookingData,
+          "The car owner has removed this listing from our platform. We apologize for any inconvenience caused."
+        );
+      } catch (notificationError) {
+        console.error(`Failed to send notification/email for booking ${booking._id}:`, notificationError);
+        // Continue with other bookings even if one fails
+      }
     }
   }
 

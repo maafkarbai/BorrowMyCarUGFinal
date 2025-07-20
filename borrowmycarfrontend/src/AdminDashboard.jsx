@@ -1379,24 +1379,33 @@ const AdminDashboard = () => {
       setError("");
     } catch (err) {
       console.error("Error deleting car:", err);
+      console.error("Error response data:", err.response?.data);
       
       // Check if it's due to active bookings
-      if (err.response?.status === 400 && err.response?.data?.activeBookingsCount) {
-        const { activeBookingsCount } = err.response.data;
-        const forceDelete = window.confirm(
-          `This car has ${activeBookingsCount} active booking(s). Do you want to force delete and cancel all active bookings?`
-        );
+      if (err.response?.status === 400) {
+        const errorMessage = err.response?.data?.message || "";
+        const hasActiveBookings = errorMessage.includes("active bookings") || err.response?.data?.activeBookingsCount;
         
-        if (forceDelete) {
-          try {
-            await adminAPI.delete(`/admin/cars/${carId}?force=true`);
-            await Promise.all([fetchCars(), fetchStats()]);
-            setError("");
-            alert(`Car deleted successfully. ${activeBookingsCount} booking(s) were cancelled.`);
-          } catch (forceErr) {
-            console.error("Error force deleting car:", forceErr);
-            setError("Failed to force delete car");
+        if (hasActiveBookings) {
+          const activeBookingsCount = err.response?.data?.activeBookingsCount || "some";
+          const forceDelete = window.confirm(
+            `This car has ${activeBookingsCount} active booking(s). Do you want to force delete and cancel all active bookings?`
+          );
+          
+          if (forceDelete) {
+            try {
+              const adminAPI = getAdminAPI();
+              await adminAPI.delete(`/admin/cars/${carId}?force=true`);
+              await Promise.all([fetchCars(), fetchStats()]);
+              setError("");
+              alert(`Car deleted successfully. ${activeBookingsCount !== "some" ? activeBookingsCount : "All"} booking(s) were cancelled.`);
+            } catch (forceErr) {
+              console.error("Error force deleting car:", forceErr);
+              setError(forceErr.response?.data?.message || "Failed to force delete car");
+            }
           }
+        } else {
+          setError(errorMessage || "Failed to delete car");
         }
       } else {
         setError(err.response?.data?.message || "Failed to delete car");

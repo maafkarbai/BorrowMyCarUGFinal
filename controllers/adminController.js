@@ -540,7 +540,7 @@ export const deleteCar = handleAsyncError(async (req, res) => {
       car: carId,
       status: { $in: ["pending", "approved", "confirmed", "active"] },
     })
-      .populate("user", "name email")
+      .populate("renter", "name email")
       .populate("car", "title make model");
 
     await Booking.updateMany(
@@ -560,7 +560,7 @@ export const deleteCar = handleAsyncError(async (req, res) => {
     for (const booking of populatedBookings) {
       // Create notification
       await Notification.create({
-        user: booking.user._id,
+        user: booking.renter._id,
         type: "booking_cancelled",
         title: "Booking Cancelled - Car No Longer Available",
         message: `Your booking for ${booking.car.title} has been cancelled as the car has been removed from the platform by our administrators.`,
@@ -572,16 +572,16 @@ export const deleteCar = handleAsyncError(async (req, res) => {
         carBrand: booking.car.make,
         carModel: booking.car.model,
         carTitle: booking.car.title,
-        startDate: booking.pickupDate,
-        endDate: booking.returnDate,
-        duration: Math.ceil((new Date(booking.returnDate) - new Date(booking.pickupDate)) / (1000 * 60 * 60 * 24)),
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        duration: Math.ceil((new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60 * 60 * 24)),
         totalAmount: booking.totalPayable,
         bookingId: booking._id,
-        renterName: booking.user.name,
+        renterName: booking.renter.name,
       };
 
       await emailService.sendBookingCancellationEmail(
-        booking.user.email,
+        booking.renter.email,
         bookingData,
         "The car owner has removed this listing from our platform. We apologize for any inconvenience caused."
       );
